@@ -50,7 +50,9 @@ it('points to panel providers that still register the plugin', function () {
 
     $this->artisan('softrequired:uninstall', ['--force' => true])
         ->expectsOutputToContain('SoftRequiredPlugin is still registered')
-        ->expectsOutputToContain($provider . ':4')
+        // Basename only — File::allFiles() returns native separators, so a
+        // full-path assertion breaks on Windows.
+        ->expectsOutputToContain('AdminPanelProvider.php:4')
         ->assertSuccessful();
 });
 
