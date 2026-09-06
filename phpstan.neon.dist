@@ -4,6 +4,9 @@ includes:
 
 parameters:
     level: 4
+    # The CI matrix spans Filament ^4.0|^5.0 — some ignores only match on
+    # one major, which must not fail the other.
+    reportUnmatchedIgnoredErrors: false
     paths:
         - src
         - config
