@@ -1,95 +1,44 @@
-# :package_description
+# softrequired
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
+> Between required and optional lies reality.
 
-<!--delete-->
----
-This repo can be used to scaffold a Filament plugin. Follow these steps to get started:
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/blemli/softrequired-for-filament.svg?style=flat-square)](https://packagist.org/packages/blemli/softrequired-for-filament) [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/blemli/softrequired-for-filament/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/blemli/softrequired-for-filament/actions?query=workflow%3Atests+branch%3Amain) [![Total Downloads](https://img.shields.io/packagist/dt/blemli/softrequired-for-filament.svg?style=flat-square)](https://packagist.org/packages/blemli/softrequired-for-filament)
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Make something great!
----
-<!--/delete-->
-
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+`required()` doesn't produce data — it produces `asdf`, `test@example.com`, and blocked users. Some fields are required *by the business* but unknowable *at entry time*. `->softRequired()` lets people save and keep working, then tracks what's missing: a warning on the field, a note on save (or a confirm modal), an `incomplete()` scope, an automatic table filter, and a dashboard completion widget that lists what's missing per record — and lets you **complete it right there**, in a modal built from your actual form fields. No migrations, no status column — completeness is derived from the data, so it can never lie. And `Customer::incomplete()` is a machine-readable backlog: hand it to a human — or an AI — to fill the gaps.
 
 ## Installation
 
-You can install the package via composer:
-
 ```bash
-composer require :vendor_slug/:package_slug
+composer require blemli/softrequired-for-filament
+php artisan softrequired-for-filament:install
 ```
 
-> [!IMPORTANT]
-> If you have not set up a custom theme and are using Filament Panels follow the instructions in the [Filament Docs](https://filamentphp.com/docs/4.x/styling/overview#creating-a-custom-theme) first.
-
-After setting up a custom theme add the plugin's views to your theme css file or your app's css file if using the standalone packages.
-
-```css
-@source '../../../../vendor/:vendor_slug/:package_slug/resources/**/*.blade.php';
-```
-
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag=":package_slug-config"
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
+Register the plugin in your panel provider: `->plugin(SoftRequiredPlugin::make())`
 
 ## Usage
 
 ```php
-$variable = new VendorName\Skeleton();
-echo $variable->echoPhrase('Hello, VendorName!');
+// Form — declare once, right where required() would go:
+TextInput::make('email')->softRequired(),
+TextInput::make('company')->softRequired(warn: false), // counts, but never nags
+
+// Model — add the trait; the fields are introspected from your form:
+use Completable;
+
+Customer::incomplete()->count();      // scope, derived from the form
+$customer->getIncompleteAttributes(); // ['email' => 'Email']
 ```
 
-## Testing
+Saving always stays possible: empty soft-required fields show a warning hint, saving pops a warning notification ("Saved — still missing: Email"), the resource table grows an **Incomplete** filter, and a dashboard widget counts incomplete records until there are none. Prefer asking first? `'on_incomplete_save' => 'confirm'` shows a "Save anyway?" modal instead. Ships in English and German.
 
-```bash
-composer test
-```
+## When NOT to use this
 
-## Changelog
+- **The whole record may be empty?** That's a draft — use a status field.
+- **The value can be derived?** Compute it, don't nag.
+- **You're marking most of the form?** You're modelling a workflow, not completeness.
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
-
-## Credits
-
-- [:author_name](https://github.com/:author_username)
-- [All Contributors](../../contributors)
+`softRequired()` is only for fields that are business-required, unknowable at entry, and suppliable later — by a person, or by an AI working through `Model::incomplete()`.
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+MIT © [blemli](https://github.com/blemli)

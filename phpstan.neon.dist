@@ -1,13 +1,43 @@
 includes:
     - phpstan-baseline.neon
+    - vendor/larastan/larastan/extension.neon
 
 parameters:
     level: 4
     paths:
         - src
         - config
-        - database
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
-
+    ignoreErrors:
+        # The trait is consumer-facing package API; nothing inside this package uses it.
+        - identifier: trait.unused
+          path: src/Concerns/Completable.php
+        # softRequired()/isSoftRequired()/shouldWarnWhenSoftRequired() and
+        # withoutIncompleteFilter() are macros this package registers on
+        # Filament's Field/Table (larastan resolves macros on Illuminate
+        # classes only). The test suite executes every one of them.
+        - message: '#Call to an undefined method Filament\\Forms\\Components\\Field::(softRequired|isSoftRequired|shouldWarnWhenSoftRequired)\(\)#'
+        # incomplete() is the Eloquent scope the Completable trait gives
+        # every consuming model; the filter and widget only ever run against
+        # models the manager verified to use the trait.
+        - message: '#Call to an undefined (static )?method (Illuminate\\Database\\Eloquent\\Builder|Illuminate\\Database\\Eloquent\\Model)(<[^>]+>)?::incomplete\(\)#'
+        # Macro closures are Closure::bind()-ed to the Field/Table instance
+        # at runtime; PHPStan sees the service provider as $this. The @var
+        # tags document the runtime binding, and the protected $isLive read
+        # is intentional (isLive() falls back to the not-yet-existing
+        # container) — covered by SoftRequiredFieldTest.
+        - identifier: varTag.nativeType
+          path: src/SoftRequiredServiceProvider.php
+        - identifier: property.protected
+          path: src/SoftRequiredServiceProvider.php
+        - identifier: method.notFound
+          path: src/SoftRequiredServiceProvider.php
+        # The widget only ever handles models the manager verified to use
+        # the Completable trait, so the trait's methods exist on every
+        # record here; the view name is a valid published package view.
+        - identifier: method.notFound
+          path: src/Widgets/IncompleteRecordsWidget.php
+        - identifier: property.defaultValue
+          path: src/Widgets/IncompleteRecordsWidget.php
