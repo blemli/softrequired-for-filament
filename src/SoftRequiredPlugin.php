@@ -21,6 +21,8 @@ class SoftRequiredPlugin implements Plugin
 
     protected bool | Closure | null $tableFilter = null;
 
+    protected bool | Closure | null $alwaysShowCompleteAction = null;
+
     protected bool | Closure | null $widget = null;
 
     protected bool | Closure | null $resourceWidget = null;
@@ -112,6 +114,24 @@ class SoftRequiredPlugin implements Plugin
     {
         return $this->evaluate($this->tableFilter)
             ?? (bool) config('softrequired-for-filament.table_filter.enabled', true);
+    }
+
+    /**
+     * Show the per-record "Complete" action on every incomplete record —
+     * not only while the Incomplete filter is active — and let hosts put
+     * it on surfaces without a filter (kanban cards).
+     */
+    public function alwaysShowCompleteAction(bool | Closure $always = true): static
+    {
+        $this->alwaysShowCompleteAction = $always;
+
+        return $this;
+    }
+
+    public function isCompleteActionAlwaysVisible(): bool
+    {
+        return $this->evaluate($this->alwaysShowCompleteAction)
+            ?? (bool) config('softrequired-for-filament.table_action.always', false);
     }
 
     public function widget(bool | Closure $enabled = true): static

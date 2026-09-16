@@ -27,6 +27,12 @@ return [
         'except' => [],
     ],
 
+    'table_action' => [
+        // Show the per-record "Complete" action on every incomplete record
+        // instead of only while the Incomplete filter is active.
+        'always' => false,
+    ],
+
     'widget' => [
         // Show the incomplete-records dashboard widget (it hides itself
         // whenever there is nothing left to complete).

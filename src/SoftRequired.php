@@ -136,6 +136,12 @@ class SoftRequired
         return rescue(fn (): array => $this->fieldsFor($model), [], report: false) !== [];
     }
 
+    public function isCompleteActionAlwaysVisible(): bool
+    {
+        return SoftRequiredPlugin::current()?->isCompleteActionAlwaysVisible()
+            ?? (bool) config('softrequired-for-filament.table_action.always', false);
+    }
+
     public function disableFilterFor(Table $table): void
     {
         $this->tablesWithoutFilter[$table] = true;

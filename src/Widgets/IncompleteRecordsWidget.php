@@ -3,17 +3,14 @@
 namespace Blemli\SoftRequired\Widgets;
 
 use Blemli\SoftRequired\SoftRequired;
+use Blemli\SoftRequired\Support\CompletionModal;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\Field;
-use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * The completion inbox: every incomplete record with exactly what is
@@ -107,12 +104,12 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
             ->schema(function (array $arguments): array {
                 $record = $this->resolveRecord($arguments);
 
-                return $record === null ? [] : $this->modalFields($record);
+                return $record === null ? [] : CompletionModal::fields($record);
             })
             ->fillForm(function (array $arguments): array {
                 $record = $this->resolveRecord($arguments);
 
-                return $record?->only($this->modalAttributes($record)) ?? [];
+                return $record === null ? [] : CompletionModal::prefill($record);
             })
             ->action(function (array $arguments, array $data): void {
                 $record = $this->resolveRecord($arguments);
@@ -121,43 +118,8 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
                     return;
                 }
 
-                // Companion fields are disabled and never dehydrate — only
-                // the actually-missing attributes may be written.
-                $record->fill(Arr::only($data, array_keys($record->getIncompleteAttributes())))->save();
-
-                Notification::make()
-                    ->success()
-                    ->title(__('softrequired-for-filament::softrequired.action.completed'))
-                    ->send();
+                CompletionModal::persist($record, $data);
             });
-    }
-
-    /**
-     * The modal's fields: the record's missing attributes plus every field
-     * their validation rules depend on, recursively.
-     *
-     * @return array<Field>
-     */
-    protected function modalFields(Model $record): array
-    {
-        return app(SoftRequired::class)->completionFormFields(
-            $record::class,
-            array_keys($record->getIncompleteAttributes()),
-        );
-    }
-
-    /**
-     * Everything shown in the modal (missing + greyed-out companions), for
-     * prefilling — always derived server-side, never from client data.
-     *
-     * @return list<string>
-     */
-    protected function modalAttributes(Model $record): array
-    {
-        return array_map(
-            fn ($field): string => $field->getName(),
-            $this->modalFields($record),
-        );
     }
 
     /**
@@ -166,30 +128,12 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
      */
     protected function resolveRecord(array $arguments): ?Model
     {
-        $manager = app(SoftRequired::class);
         $model = $arguments['model'] ?? null;
-        $key = $arguments['key'] ?? null;
 
-        if (! is_string($model) || $key === null || ! array_key_exists($model, $manager->widgetEntries())) {
+        if (! is_string($model) || ! array_key_exists($model, app(SoftRequired::class)->widgetEntries())) {
             return null;
         }
 
-        $record = $model::query()->find($key);
-
-        if ($record === null) {
-            return null;
-        }
-
-        $resource = $manager->resourceFor($model);
-
-        if ($resource !== null && ! $resource::canEdit($record)) {
-            return null;
-        }
-
-        if ($resource === null && Gate::getPolicyFor($model) !== null && ! Gate::allows('update', $record)) {
-            return null;
-        }
-
-        return $record;
+        return CompletionModal::resolveRecord($model, $arguments['key'] ?? null);
     }
 }
