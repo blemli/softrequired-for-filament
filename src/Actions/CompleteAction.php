@@ -7,10 +7,10 @@ use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * "Complete" for one record wherever a record is at hand: pushed onto every
- * Completable resource's list table (rows and cards alike) by the table
- * hook, and usable on any other surface that hands the action a record —
- * a kanban card, a relation manager. Hidden for complete records.
+ * "Complete" for one record wherever a surface hands the action its record:
+ * a kanban card, a relation manager, a custom page. The list pages get the
+ * same modal through CompleteRecordAction instead (see the table hook).
+ * Hidden for complete records; quiet when evaluated without a record.
  */
 class CompleteAction extends Action
 {
@@ -27,25 +27,18 @@ class CompleteAction extends Action
             ->label(fn (): string => __('softrequired-for-filament::softrequired.action.complete'))
             ->color('warning')
             ->link()
-            ->modalHeading(function (Model $record): string {
-                file_put_contents('/tmp/softreq-debug.txt', "heading\n", FILE_APPEND);
-
-                return $record->completionTitle();
-            })
+            // Pages may evaluate the modal configuration without a record at
+            // hand (a kanban board caching its card actions) — stay quiet then.
+            ->modalHeading(fn (?Model $record): string => $record?->completionTitle() ?? '')
             ->modalSubmitActionLabel(fn (): string => __('softrequired-for-filament::softrequired.action.save'))
-            ->schema(function (Model $record): array {
-                file_put_contents('/tmp/softreq-debug.txt', 'schema:' . count(CompletionModal::fields($record)) . "\n", FILE_APPEND);
-
-                return CompletionModal::fields($record);
-            })
-            ->fillForm(function (Model $record): array {
-                file_put_contents('/tmp/softreq-debug.txt', "fill\n", FILE_APPEND);
-
-                return CompletionModal::prefill($record);
-            })
+            ->schema(fn (?Model $record): array => $record === null ? [] : CompletionModal::fields($record))
+            ->fillForm(fn (?Model $record): array => $record === null ? [] : CompletionModal::prefill($record))
             ->visible(fn (?Model $record): bool => $record !== null && method_exists($record, 'isIncomplete') && $record->isIncomplete())
-            ->action(function (Model $record, array $data): void {
-                file_put_contents('/tmp/softreq-debug.txt', json_encode(['data' => $data, 'incomplete' => array_keys($record->getIncompleteAttributes()), 'fields' => array_map(fn ($f) => $f->getName(), CompletionModal::fields($record))]));
+            ->action(function (?Model $record, array $data): void {
+                if ($record === null) {
+                    return;
+                }
+
                 CompletionModal::persist($record, $data);
             });
     }
