@@ -108,7 +108,7 @@ class TableFilterHook extends ComponentHook
                     ->color('warning')
                     ->link()
                     ->livewireClickHandlerEnabled(false)
-                    ->alpineClickHandler(fn (Model $record): string => '$wire.mountAction(\'completeRecord\', ' . json_encode(['key' => (string) $record->getKey()]) . ')')
+                    ->alpineClickHandler(fn (Model $record): string => "\$wire.mountAction('completeRecord', { key: '" . addslashes((string) $record->getKey()) . "' })")
                     ->visible(fn (?Model $record, Table $table): bool => $record !== null
                         && $record->isIncomplete()
                         && ($manager->isCompleteActionAlwaysVisible() || static::incompleteFilterActive($table))),
