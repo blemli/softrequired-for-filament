@@ -40,6 +40,11 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
         return config('softrequired-for-filament.widget.sort') ?? parent::getSort();
     }
 
+    public function getColumnSpan(): int | string | array
+    {
+        return config('softrequired-for-filament.widget.column_span') ?? $this->columnSpan;
+    }
+
     public function getHeading(): string
     {
         return __('softrequired-for-filament::softrequired.widget.heading');

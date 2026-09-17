@@ -41,6 +41,11 @@ return [
         // Widget sort order within the dashboard. null keeps Filament's default.
         'sort' => null,
 
+        // Column span on the dashboard grid: 'full', an integer, or a
+        // breakpoint map like ['default' => 1, 'md' => 2]. The inbox is one
+        // short list — half a row is plenty on most dashboards.
+        'column_span' => 'full',
+
         // How many incomplete records the widget lists per model.
         'records_limit' => 5,
 

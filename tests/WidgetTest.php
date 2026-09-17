@@ -158,3 +158,11 @@ it('renders no resource widget when disabled via config', function () {
     livewire(ListTestModels::class)
         ->assertDontSeeLivewire(ResourceIncompleteWidget::class);
 });
+
+it('takes its dashboard column span from the config', function () {
+    expect((new IncompleteRecordsWidget)->getColumnSpan())->toBe('full');
+
+    config()->set('softrequired-for-filament.widget.column_span', ['default' => 1, 'md' => 2]);
+
+    expect((new IncompleteRecordsWidget)->getColumnSpan())->toBe(['default' => 1, 'md' => 2]);
+});

@@ -2,6 +2,10 @@
 
 All notable changes to `softrequired-for-filament` will be documented in this file.
 
+## v0.1.4 - 2026-09-17
+
+- `widget.column_span` config: the dashboard inbox's grid span (`'full'`, an integer or a breakpoint map) — half a row is plenty for one short list
+
 ## v0.1.0 - 2026-09-06
 
 Initial release.
