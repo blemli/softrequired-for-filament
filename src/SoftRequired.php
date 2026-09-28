@@ -11,6 +11,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use WeakMap;
 
@@ -96,6 +97,19 @@ class SoftRequired
     public function usesCompletable(string $modelClass): bool
     {
         return in_array(Completable::class, class_uses_recursive($modelClass), true);
+    }
+
+    /**
+     * Whether a form's record expects its soft-required fields right now.
+     * Records that are not Completable — and forms without a record — do.
+     */
+    public function isCompletionRequiredFor(?Model $record): bool
+    {
+        if ($record === null || ! $this->usesCompletable($record::class)) {
+            return true;
+        }
+
+        return $record->isCompletionRequired();
     }
 
     public function incompleteSaveModeFor(object $livewire): string

@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
                 TestResource::class,
                 PlainResource::class,
                 OptOutResource::class,
+                DraftResource::class,
             ])
             ->middleware([
                 EncryptCookies::class,

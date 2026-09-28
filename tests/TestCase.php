@@ -90,6 +90,14 @@ class TestCase extends Orchestra
             $table->timestamps();
         });
 
+        Schema::create('draft_models', function ($table): void {
+            $table->id();
+            $table->string('title')->nullable();
+            $table->string('status')->nullable();
+            $table->string('email')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('plain_models', function ($table): void {
             $table->id();
             $table->string('name')->nullable();

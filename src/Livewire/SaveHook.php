@@ -132,7 +132,7 @@ class SaveHook extends ComponentHook
                 continue;
             }
 
-            if (! $field->isSoftRequired() || ! $field->shouldWarnWhenSoftRequired()) {
+            if (! $field->isSoftRequiredForRecord() || ! $field->shouldWarnWhenSoftRequired()) {
                 continue;
             }
 

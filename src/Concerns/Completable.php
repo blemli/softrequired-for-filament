@@ -38,18 +38,53 @@ trait Completable
         return property_exists($instance, 'completable') ? $instance->completable : null;
     }
 
+    /**
+     * Records whose completeness counts right now and that still miss at
+     * least one completable attribute.
+     */
     public function scopeIncomplete(Builder $query): Builder
     {
         return $query->where(function (Builder $query): void {
-            foreach (static::completableAttributes() as $attribute) {
-                $this->applyAttributeEmptyClause($query, $attribute);
-            }
+            $this->applyIncompleteClauses($query);
         });
     }
 
+    /**
+     * Everything that is not incomplete — filled records and records whose
+     * completeness does not count yet (see isCompletionRequired()).
+     */
     public function scopeComplete(Builder $query): Builder
     {
         return $query->whereNot(function (Builder $query): void {
+            $this->applyIncompleteClauses($query);
+        });
+    }
+
+    /**
+     * Whether this record is expected to be complete at all. A draft, an
+     * idea, an archived record … may leave its soft-required fields empty
+     * without counting as incomplete anywhere: the scopes, isComplete(),
+     * the table filter, the widget, the complete action and the form hint
+     * and save notification all consult it. Override together with
+     * scopeCompletionRequired() so PHP and SQL agree.
+     */
+    public function isCompletionRequired(): bool
+    {
+        return true;
+    }
+
+    /**
+     * The SQL twin of isCompletionRequired(): constrain the query to the
+     * records whose completeness counts. Unconstrained by default.
+     */
+    public function scopeCompletionRequired(Builder $query): Builder
+    {
+        return $query;
+    }
+
+    protected function applyIncompleteClauses(Builder $query): void
+    {
+        $query->completionRequired()->where(function (Builder $query): void {
             foreach (static::completableAttributes() as $attribute) {
                 $this->applyAttributeEmptyClause($query, $attribute);
             }
@@ -78,7 +113,7 @@ trait Completable
 
     public function isComplete(): bool
     {
-        return $this->getIncompleteAttributes() === [];
+        return ! $this->isCompletionRequired() || $this->getIncompleteAttributes() === [];
     }
 
     public function isIncomplete(): bool
@@ -91,6 +126,10 @@ trait Completable
      */
     public function getIncompleteAttributes(): array
     {
+        if (! $this->isCompletionRequired()) {
+            return [];
+        }
+
         $incomplete = [];
 
         foreach (static::completableFields() as $attribute => $field) {

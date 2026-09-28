@@ -29,6 +29,22 @@ Customer::incomplete()->count();      // scope, derived from the form
 $customer->getIncompleteAttributes(); // ['email' => 'Email']
 ```
 
+Completeness that depends on the record — a draft, an idea, an archived row — opts out on the model, once, for PHP and SQL alike:
+
+```php
+public function isCompletionRequired(): bool
+{
+    return ! $this->status->isDraft();
+}
+
+public function scopeCompletionRequired(Builder $query): Builder
+{
+    return $query->where('status', '!=', 'draft');
+}
+```
+
+Such records never count as incomplete: no hint, no note on save, absent from the filter and the widget. On create the fresh model instance (its defaults) decides.
+
 Saving always stays possible: empty soft-required fields show a warning hint, saving pops a warning notification ("Saved — still missing: Email"), the resource table grows an **Incomplete** filter, and a dashboard widget counts incomplete records until there are none. Prefer asking first? `'on_incomplete_save' => 'confirm'` shows a "Save anyway?" modal instead. Ships in English and German.
 
 ## When NOT to use this

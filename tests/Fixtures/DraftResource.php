@@ -1,0 +1,41 @@
+<?php
+
+namespace Blemli\SoftRequired\Tests\Fixtures;
+
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class DraftResource extends Resource
+{
+    protected static ?string $model = DraftModel::class;
+
+    protected static ?string $slug = 'drafts';
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            TextInput::make('title')->required(),
+            TextInput::make('status'),
+            TextInput::make('email')->softRequired(),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table->columns([
+            TextColumn::make('title'),
+        ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => DraftResourcePages\ListDraftModels::route('/'),
+            'create' => DraftResourcePages\CreateDraftModel::route('/create'),
+            'edit' => DraftResourcePages\EditDraftModel::route('/{record}/edit'),
+        ];
+    }
+}

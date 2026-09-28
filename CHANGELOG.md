@@ -2,6 +2,11 @@
 
 All notable changes to `softrequired-for-filament` will be documented in this file.
 
+## v0.1.5 - 2026-09-29
+
+- Conditional completeness: `Completable::isCompletionRequired()` + `scopeCompletionRequired()` let a record opt out while it is a draft, an idea, archived … — the `incomplete()`/`complete()` scopes, `isComplete()`, the table filter, the widget, the complete action, the field hint and the save notification all honour it. Override both so PHP and SQL agree.
+- `Field::isSoftRequiredForRecord()`: the record-aware reading of `isSoftRequired()` (on create the fresh model instance and its defaults decide); form introspection keeps reading the record-independent one.
+
 ## v0.1.4 - 2026-09-17
 
 - `widget.column_span` config: the dashboard inbox's grid span (`'full'`, an integer or a breakpoint map) — half a row is plenty for one short list

@@ -10,6 +10,7 @@ use Closure;
 use Filament\Forms\Components\Field;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -61,7 +62,7 @@ class SoftRequiredServiceProvider extends PackageServiceProvider
             $this->meta('softRequired', $condition);
             $this->meta('softRequiredWarn', $warn);
 
-            $active = fn (Field $component): bool => $component->isSoftRequired()
+            $active = fn (Field $component): bool => $component->isSoftRequiredForRecord()
                 && $component->shouldWarnWhenSoftRequired()
                 && blank($component->getState());
 
@@ -86,6 +87,24 @@ class SoftRequiredServiceProvider extends PackageServiceProvider
         Field::macro('isSoftRequired', function (): bool {
             /** @var Field $this */
             return (bool) $this->evaluate($this->getMeta('softRequired') ?? false);
+        });
+
+        // The record-aware reading: soft-required by the field's own
+        // condition AND expected by the record it edits (Completable::
+        // isCompletionRequired()). On create the fresh model instance
+        // decides — its defaults are what the record will be. Form-only
+        // surfaces (hint, save notification, confirm modal) read this one;
+        // introspection reads isSoftRequired() so the attribute list stays
+        // record-independent.
+        Field::macro('isSoftRequiredForRecord', function (): bool {
+            /** @var Field $this */
+            if (! $this->isSoftRequired()) {
+                return false;
+            }
+
+            $record = rescue(fn (): mixed => $this->getModelInstance(), null, report: false);
+
+            return app(SoftRequired::class)->isCompletionRequiredFor($record instanceof Model ? $record : null);
         });
 
         Field::macro('shouldWarnWhenSoftRequired', function (): bool {
