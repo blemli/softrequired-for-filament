@@ -271,3 +271,22 @@ it('drops the list stat as soon as the last record is completed', function () {
         ->dispatch(SoftRequired::COMPLETED_EVENT, model: TestModel::class, key: $record->getKey())
         ->assertDontSeeHtml('fi-wi-stats-overview');
 });
+
+/*
+ * Livewire mounts on the first tag of the rendered view. A root wrapped in
+ * a Blade condition hands that to the section inside — and the action
+ * modal container lands outside the component, where no partial update
+ * ever reaches it. The widget root carries wire:id, with or without entries.
+ */
+it('mounts livewire on the widget root, with and without entries', function () {
+    $rootIsLivewireRoot = fn (string $html): bool => (bool) preg_match('/<div[^>]*\bwire:id=[^>]*\bclass="[^"]*fi-wi-widget|<div[^>]*\bclass="[^"]*fi-wi-widget[^"]*"[^>]*\bwire:id=/s', $html);
+
+    expect($rootIsLivewireRoot(livewire(IncompleteRecordsWidget::class)->html()))->toBeTrue();
+
+    TestModel::create(['title' => 'missing']);
+
+    $html = livewire(IncompleteRecordsWidget::class)->html();
+
+    expect($rootIsLivewireRoot($html))->toBeTrue()
+        ->and(strpos($html, 'wire:partial="action-modals"'))->toBeLessThan(strrpos($html, '</div>'));
+});

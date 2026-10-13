@@ -2,6 +2,10 @@
 
 All notable changes to `softrequired-for-filament` will be documented in this file.
 
+## v0.1.7 - 2026-10-13
+
+- The inbox keeps the widget root as its Livewire root whatever the data (a root wrapped in `@if` handed Livewire the section inside, and the action modal container landed outside the component — «Vervollständigen» on the dashboard opened nothing). The empty state is the hidden root itself.
+
 ## v0.1.6 - 2026-10-13
 
 - Completion has a signal: `CompletionModal::persist()` dispatches `SoftRequired::COMPLETED_EVENT` (`softrequired::completed`, `model` + `key`) from the inbox, the list action and `CompleteAction`; the inbox and the list stat refresh on it and on a generic `refresh` event.

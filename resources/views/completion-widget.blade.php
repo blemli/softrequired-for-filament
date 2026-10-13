@@ -2,11 +2,14 @@
     $entries = $this->getEntries();
 @endphp
 
-@if ($entries === [])
-    {{-- Everything complete: the inbox takes itself off the page, whoever placed it. --}}
-    <div class="hidden"></div>
-@else
-<x-filament-widgets::widget>
+{{--
+    The root stays the widget root whatever the data: Livewire mounts on the
+    first tag it finds, and a root wrapped in @if would hand that to the
+    section inside — with the action modals landing outside the component.
+    Everything complete → the root hides itself, whoever placed it.
+--}}
+<x-filament-widgets::widget @class(['hidden' => $entries === []])>
+    @if ($entries !== [])
     <x-filament::section :heading="$this->getHeading()">
         {{-- Keyed by the set of tabs: when one vanishes, Alpine starts over on «all»
              instead of keeping a tab that no longer exists. --}}
@@ -93,7 +96,7 @@
             @endforeach
         </div>
     </x-filament::section>
+    @endif
 
     <x-filament-actions::modals />
 </x-filament-widgets::widget>
-@endif
