@@ -18,6 +18,13 @@ use WeakMap;
 class SoftRequired
 {
     /**
+     * Dispatched (Livewire) by every completion surface after a record was
+     * completed: `model` (class) and `key`. The inbox and the list stat
+     * refresh on it; listen to it wherever completeness is shown.
+     */
+    public const string COMPLETED_EVENT = 'softrequired::completed';
+
+    /**
      * @var array<class-string, array<string, array{label: string, warn: bool}>>
      */
     protected array $fieldCache = [];

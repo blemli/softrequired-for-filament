@@ -2,6 +2,13 @@
 
 All notable changes to `softrequired-for-filament` will be documented in this file.
 
+## v0.1.6 - 2026-10-13
+
+- Completion has a signal: `CompletionModal::persist()` dispatches `SoftRequired::COMPLETED_EVENT` (`softrequired::completed`, `model` + `key`) from the inbox, the list action and `CompleteAction`; the inbox and the list stat refresh on it and on a generic `refresh` event.
+- Both widgets take themselves off the page once nothing is incomplete, whoever placed them — no more empty «Incomplete records» box after the last completion, no empty stat shell above the table.
+- `IncompleteRecordsWidget::canView()` is access only (Filament aborts a widget's hydrate with 403 when it fails — the request that completed the last record used to die on it); `hasEntries()` is the data question.
+- Inbox tabs are keyed by model, not by position: a tab no longer points at the wrong model after an entry vanished.
+
 ## v0.1.5 - 2026-09-29
 
 - Conditional completeness: `Completable::isCompletionRequired()` + `scopeCompletionRequired()` let a record opt out while it is a draft, an idea, archived … — the `incomplete()`/`complete()` scopes, `isComplete()`, the table filter, the widget, the complete action, the field hint and the save notification all honour it. Override both so PHP and SQL agree.

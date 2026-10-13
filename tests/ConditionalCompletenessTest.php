@@ -112,14 +112,14 @@ it('hides the complete action and the widget for exempt records', function () {
         ->filterTable('incomplete')
         ->assertCanNotSeeTableRecords([$draft]);
 
-    expect(IncompleteRecordsWidget::canView())->toBeFalse();
+    expect(IncompleteRecordsWidget::hasEntries())->toBeFalse();
 
     $live = DraftModel::create(['title' => 'l', 'status' => 'live', 'email' => null]);
 
     livewire(ListDraftModels::class)
         ->assertTableActionVisible('complete', $live);
 
-    expect(IncompleteRecordsWidget::canView())->toBeTrue();
+    expect(IncompleteRecordsWidget::hasEntries())->toBeTrue();
 
     livewire(IncompleteRecordsWidget::class)
         ->assertSee(DraftResource::getPluralModelLabel());

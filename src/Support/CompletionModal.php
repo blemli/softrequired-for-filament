@@ -8,6 +8,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Component;
 
 /**
  * The "Complete" modal, once: the dashboard widget and the table/card
@@ -90,7 +91,7 @@ class CompletionModal
      *
      * @param  array<string, mixed>  $data
      */
-    public static function persist(Model $record, array $data): void
+    public static function persist(Model $record, array $data, ?Component $livewire = null): void
     {
         $record->fill(Arr::only($data, array_keys($record->getIncompleteAttributes())))->save();
 
@@ -98,5 +99,10 @@ class CompletionModal
             ->success()
             ->title(__('softrequired-for-filament::softrequired.action.completed'))
             ->send();
+
+        // Completion has a signal: every other surface showing completeness
+        // (the inbox, the list stat, a board) catches up right away instead
+        // of on its own next request.
+        $livewire?->dispatch(SoftRequired::COMPLETED_EVENT, model: $record::class, key: $record->getKey());
     }
 }

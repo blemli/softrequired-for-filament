@@ -6,6 +6,7 @@ use Blemli\SoftRequired\SoftRequired;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -18,6 +19,31 @@ class ResourceIncompleteWidget extends StatsOverviewWidget
      * @var class-string|null
      */
     public ?string $resource = null;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function getListeners(): array
+    {
+        return [
+            ...parent::getListeners(),
+            SoftRequired::COMPLETED_EVENT => '$refresh',
+            'refresh' => '$refresh',
+        ];
+    }
+
+    /**
+     * The render hook only decides on a full page load; once the last
+     * record is completed in place, the stat takes itself off the page.
+     */
+    public function render(): View
+    {
+        if ($this->getCachedStats() === []) {
+            return view('softrequired-for-filament::empty');
+        }
+
+        return parent::render();
+    }
 
     protected function getStats(): array
     {

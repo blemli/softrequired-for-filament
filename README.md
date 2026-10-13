@@ -47,6 +47,8 @@ Such records never count as incomplete: no hint, no note on save, absent from th
 
 Saving always stays possible: empty soft-required fields show a warning hint, saving pops a warning notification ("Saved — still missing: Email"), the resource table grows an **Incomplete** filter, and a dashboard widget counts incomplete records until there are none. Prefer asking first? `'on_incomplete_save' => 'confirm'` shows a "Save anyway?" modal instead. Ships in English and German.
 
+Completion has a signal: every completion surface (the dashboard inbox, the list row, a `CompleteAction` on a card) dispatches the Livewire event `SoftRequired::COMPLETED_EVENT` (`softrequired::completed`, with `model` and `key`) after saving. The inbox and the list stat refresh on it — and on a generic `refresh` event — and take themselves off the page once nothing is left; listen to it in your own components wherever completeness is shown. `IncompleteRecordsWidget::canView()` is access only (the widget stays enabled while the plugin is), `IncompleteRecordsWidget::hasEntries()` says whether there is anything to list right now.
+
 ## When NOT to use this
 
 - **The whole record may be empty?** That's a draft — use a status field.

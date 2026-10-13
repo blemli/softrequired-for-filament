@@ -5,6 +5,7 @@ namespace Blemli\SoftRequired\Actions;
 use Blemli\SoftRequired\Support\CompletionModal;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Component;
 
 /**
  * The "Complete" modal as a PAGE action driven by arguments (`key`): the
@@ -49,14 +50,14 @@ class CompleteRecordAction extends Action
 
                 return $record === null ? [] : CompletionModal::prefill($record);
             })
-            ->action(function (array $arguments, array $data): void {
+            ->action(function (array $arguments, array $data, Component $livewire): void {
                 $record = $this->resolve($arguments);
 
                 if ($record === null) {
                     return;
                 }
 
-                CompletionModal::persist($record, $data);
+                CompletionModal::persist($record, $data, $livewire);
             });
     }
 

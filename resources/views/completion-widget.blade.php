@@ -2,9 +2,19 @@
     $entries = $this->getEntries();
 @endphp
 
+@if ($entries === [])
+    {{-- Everything complete: the inbox takes itself off the page, whoever placed it. --}}
+    <div class="hidden"></div>
+@else
 <x-filament-widgets::widget>
     <x-filament::section :heading="$this->getHeading()">
-        <div x-data="{ tab: 'all' }" class="flex flex-col gap-4">
+        {{-- Keyed by the set of tabs: when one vanishes, Alpine starts over on «all»
+             instead of keeping a tab that no longer exists. --}}
+        <div
+            x-data="{ tab: 'all' }"
+            wire:key="softrequired-inbox-{{ implode('-', array_column($entries, 'tab')) }}"
+            class="flex flex-col gap-4"
+        >
             @if (count($entries) > 1)
                 <x-filament::tabs>
                     <x-filament::tabs.item
@@ -16,8 +26,8 @@
 
                     @foreach ($entries as $entry)
                         <x-filament::tabs.item
-                            alpine-active="tab === 'm{{ $loop->index }}'"
-                            x-on:click="tab = 'm{{ $loop->index }}'"
+                            alpine-active="tab === '{{ $entry['tab'] }}'"
+                            x-on:click="tab = '{{ $entry['tab'] }}'"
                             :badge="$entry['count']"
                             badge-color="warning"
                         >
@@ -28,7 +38,7 @@
             @endif
 
             @foreach ($entries as $modelClass => $entry)
-                <div x-show="tab === 'all' || tab === 'm{{ $loop->index }}'">
+                <div x-show="tab === 'all' || tab === '{{ $entry['tab'] }}'">
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
                             <h4 class="fi-section-header-heading text-sm">{{ $entry['label'] }}</h4>
@@ -86,3 +96,4 @@
 
     <x-filament-actions::modals />
 </x-filament-widgets::widget>
+@endif

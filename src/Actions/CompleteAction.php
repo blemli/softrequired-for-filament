@@ -5,6 +5,7 @@ namespace Blemli\SoftRequired\Actions;
 use Blemli\SoftRequired\Support\CompletionModal;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Component;
 
 /**
  * "Complete" for one record wherever a surface hands the action its record:
@@ -34,12 +35,12 @@ class CompleteAction extends Action
             ->schema(fn (?Model $record): array => $record === null ? [] : CompletionModal::fields($record))
             ->fillForm(fn (?Model $record): array => $record === null ? [] : CompletionModal::prefill($record))
             ->visible(fn (?Model $record): bool => $record !== null && method_exists($record, 'isIncomplete') && $record->isIncomplete())
-            ->action(function (?Model $record, array $data): void {
+            ->action(function (?Model $record, array $data, Component $livewire): void {
                 if ($record === null) {
                     return;
                 }
 
-                CompletionModal::persist($record, $data);
+                CompletionModal::persist($record, $data, $livewire);
             });
     }
 }

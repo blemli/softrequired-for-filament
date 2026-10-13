@@ -11,6 +11,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * The completion inbox: every incomplete record with exactly what is
@@ -28,11 +29,24 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
 
     protected int | string | array $columnSpan = 'full';
 
+    /**
+     * Access only — never the data. Filament re-checks canView() on every
+     * hydrate and aborts with 403 when it fails, so a widget that hides on
+     * «nothing incomplete» would break the very request that completes the
+     * last record. Whether there is anything to show is the render's call.
+     */
     public static function canView(): bool
     {
-        $manager = app(SoftRequired::class);
+        return app(SoftRequired::class)->isWidgetEnabled();
+    }
 
-        return $manager->isWidgetEnabled() && $manager->hasIncompleteRecords();
+    /**
+     * Whether the inbox has anything to list right now — for a page that
+     * wants to decide the widget's place before rendering it.
+     */
+    public static function hasEntries(): bool
+    {
+        return static::canView() && app(SoftRequired::class)->hasIncompleteRecords();
     }
 
     public static function getSort(): int
@@ -50,13 +64,29 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
         return __('softrequired-for-filament::softrequired.widget.heading');
     }
 
+    /**
+     * Re-render when anything was completed (through this inbox, a list
+     * row or a board card) and on the app's generic `refresh` — the usual
+     * answer to a page restored from a navigation snapshot.
+     *
+     * @return array<string, string>
+     */
+    protected function getListeners(): array
+    {
+        return [
+            ...parent::getListeners(),
+            SoftRequired::COMPLETED_EVENT => '$refresh',
+            'refresh' => '$refresh',
+        ];
+    }
+
     public function getDefaultTestingSchemaName(): ?string
     {
         return $this->getMountedActionSchemaName() ?? $this->getDefaultTestingSchemaNameFromSchemas();
     }
 
     /**
-     * @return array<class-string, array{label: string, url: ?string, count: int, records: array<int, array{key: mixed, title: string, missing: list<string>, editUrl: ?string}>}>
+     * @return array<class-string, array{label: string, url: ?string, tab: string, count: int, more: int, records: array<int, array{key: mixed, title: string, missing: list<string>, editUrl: ?string}>}>
      */
     public function getEntries(): array
     {
@@ -87,8 +117,12 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
                 ])
                 ->all();
 
+            // Tabs are keyed by model, not by position: entries vanish as
+            // they are completed, and a tab chosen by index would point at
+            // the wrong model (or at nothing) after the next morph.
             $entries[$model] = [
                 ...$entry,
+                'tab' => Str::kebab(class_basename($model)),
                 'count' => $count,
                 'records' => $records,
                 'more' => max(0, $count - count($records)),
@@ -123,7 +157,7 @@ class IncompleteRecordsWidget extends Widget implements HasActions, HasSchemas
                     return;
                 }
 
-                CompletionModal::persist($record, $data);
+                CompletionModal::persist($record, $data, $this);
             });
     }
 
