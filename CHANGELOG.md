@@ -2,6 +2,10 @@
 
 All notable changes to `softrequired-for-filament` will be documented in this file.
 
+## v0.1.8 - 2026-11-12
+
+- The list stat counts in the singular: one incomplete record reads «Supplier with missing information» (the resource's `getModelLabel()`), several keep the plural. The heading stays the plural — it names the list.
+
 ## v0.1.7 - 2026-10-13
 
 - The inbox keeps the widget root as its Livewire root whatever the data (a root wrapped in `@if` handed Livewire the section inside, and the action modal container landed outside the component — «Vervollständigen» on the dashboard opened nothing). The empty state is the hidden root itself.

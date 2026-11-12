@@ -272,6 +272,22 @@ it('drops the list stat as soon as the last record is completed', function () {
         ->assertDontSeeHtml('fi-wi-stats-overview');
 });
 
+it('describes a single incomplete record in the singular', function () {
+    $description = fn (string $label): string => __('softrequired-for-filament::softrequired.widget.stat_description', ['label' => $label]);
+
+    TestModel::create(['title' => 'missing']);
+
+    livewire(ResourceIncompleteWidget::class, ['resource' => TestResource::class])
+        ->assertSee(TestResource::getPluralModelLabel())
+        ->assertSee($description(TestResource::getModelLabel()))
+        ->assertDontSee($description(TestResource::getPluralModelLabel()));
+
+    TestModel::create(['title' => 'missing too']);
+
+    livewire(ResourceIncompleteWidget::class, ['resource' => TestResource::class])
+        ->assertSee($description(TestResource::getPluralModelLabel()));
+});
+
 /*
  * Livewire mounts on the first tag of the rendered view. A root wrapped in
  * a Blade condition hands that to the section inside — and the action

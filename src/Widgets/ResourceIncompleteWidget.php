@@ -61,13 +61,17 @@ class ResourceIncompleteWidget extends StatsOverviewWidget
         $label = $this->resource::getPluralModelLabel();
         $url = app(SoftRequired::class)->filteredIndexUrl($this->resource);
 
+        // The heading names the list; the sentence below counts — one record
+        // reads as one.
+        $counted = $count === 1 ? $this->resource::getModelLabel() : $label;
+
         return [
             Stat::make($label, $count)
                 ->color('warning')
                 ->descriptionIcon(Heroicon::OutlinedExclamationTriangle)
                 ->description(new HtmlString(
                     '<a href="' . e($url) . '">'
-                    . e(__('softrequired-for-filament::softrequired.widget.stat_description', ['label' => $label]))
+                    . e(__('softrequired-for-filament::softrequired.widget.stat_description', ['label' => $counted]))
                     . '</a>'
                 )),
         ];
